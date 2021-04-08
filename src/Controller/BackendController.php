@@ -31,40 +31,52 @@ class BackendController extends AbstractController
         if ($request->isXMLHttpRequest()) {         
             $jobArray = $request->request->get('job');
 
-            $job = new Job();
+            $jobInclude = $this->getDoctrine()->getRepository(Job::class)->findOneBy(['name' => $jobArray['name']]);
+            
+            if (!isset($jobInclude)) {
+                $job = new Job();
 
-            $job->setName($jobArray['name']);
+                $job->setName($jobArray['name']);
 
-            if (isset($jobArray['categories'])) {
-                foreach ($jobArray['categories'] as $value) {
-                    $category = new Category();
-                    $category = $this->getDoctrine()->getRepository(Category::class)->findOneBy(['name' => $value]);
-                    $job->addCategory($category);
+                if (isset($jobArray['categories'])) {
+                    foreach ($jobArray['categories'] as $value) {
+                        $category = new Category();
+                        $category = $this->getDoctrine()->getRepository(Category::class)->findOneBy(['name' => $value]);
+                        $job->addCategory($category);
+                    }
                 }
+
+
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($job);
+                $entityManager->flush();
+                
+                // Metodo alternativo usando mysqli nativo php
+                /* $connect = new \mysqli("localhost", "root", "root", "prueba");
+                if ($connect->connect_error) {
+                    die("Connection failed: " . $connect->connect_error);
+                }
+                
+                $sql = "INSERT INTO Job VALUES (".rand().", '".$jobArray['name']."', '".$jobArray['name']."')";
+
+                if (mysqli_query($connect, $sql)) {
+                echo "Registro ingresado correctamente";
+                } else {
+                echo "Error: " . $sql . "" . mysqli_error($connect);
+                }
+                $connect->close();
+                */
             }
 
-
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($job);
-            $entityManager->flush();
-            
-            // Metodo alternativo usando mysqli nativo php
-            /* $connect = new \mysqli("localhost", "root", "root", "prueba");
-            if ($connect->connect_error) {
-                die("Connection failed: " . $connect->connect_error);
-            }
-            
-            $sql = "INSERT INTO Job VALUES (".rand().", '".$jobArray['name']."', '".$jobArray['name']."')";
-
-            if (mysqli_query($connect, $sql)) {
-               echo "Registro ingresado correctamente";
-            } else {
-               echo "Error: " . $sql . "" . mysqli_error($connect);
-            }
-            $connect->close();
-            */
-
-            return new JsonResponse($job);
+            return new JsonResponse([ 'data' => $job, 'error' => false ]);
+        }
+        else {
+            $response = new Response();
+            $response->setContent(json_encode(array(
+                'data' => 123,
+            )));
+            $response->headers->set('Content-Type', 'application/json');
+            //return new response([ 'data' => "", 'error' => false ]);
         }
     }
 

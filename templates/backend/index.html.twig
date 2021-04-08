@@ -20,7 +20,7 @@
                 var categoriesChbx = $(".category");
 
                 if (name === "") {
-                    alert("campo vacio");
+                    alert("Tienes que agregar una tarea.");
                 } else {
                     categoriesChbx.each(function () {
                         var item = $(this);
@@ -41,13 +41,14 @@
                         },
                         async: true,
                         success: function (data) {
-                            console.log(data)
+                            console.log(data);
                         }
                     });
                 }
             });
 
             $('#removeJob').click(function () {
+                console.log('click');
                 var jobId = this.name;
 
                 $.ajax({
@@ -70,16 +71,15 @@
 {% endblock %}
 
 {% block body %}
-    {% if job is defined %}
-        job
-    {% endif %}
     <div class="example-wrapper">
-        <h1>Gestor de taréas</h1>
+        <h1>Gestor de tareas</h1>
         <hr>
-        <form id="addjob" method="post" accept-charset="UTF-8">
+        <form id="addjob" method="post" accept-charset="UTF-8" novalidate>
+
+
             <input type="hidden" name="action" value="users/send-password-reset-email">
 
-            <input id="name" type="text" name="name" value="Nueva tarea" class="form-control"/>
+            <input id="name" type="text" name="name" class="form-control" placeholder="Nueva tarea"/>
             <br>
 
             <input name="php" type="checkbox" class="category form-check-input">
@@ -123,6 +123,6 @@
                 </tbody>
             </table>
         </div>
-
+        {{ dump()  }}
     </div>
 {% endblock %}
