@@ -1,3 +1,8 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+index:
+    path: /
+    controller: App\Controller\BackendController::index
+
+ajax_save_job:
+    path: /ajax-save-job
+    controller: App\Controller\BackendController::ajaxSaveJob
+    methods: [POST]
