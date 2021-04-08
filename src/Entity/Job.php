@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\JobRepository;
 use Doctrine\ORM\Mapping as ORM;
+use \App\Entity\Category;
 
 /**
  * @ORM\Entity(repositoryClass=JobRepository::class)
@@ -23,9 +24,22 @@ class Job
     private $name;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToMany(targetEntity="App\Entity\Category", inversedBy="jobs")
+     * @ORM\JoinTable(
+     *      name="jobs_categories",
+     *      joinColumns={@ORM\JoinColumn(name="job_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="category_id", referencedColumnName="id")}
+     * )
      */
     private $categories;
+
+     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->categories = new \Doctrine\Common\Collections\ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -44,15 +58,24 @@ class Job
         return $this;
     }
 
-    public function getCategories(): ?string
+    public function addCategory($categories): self
+    {
+        $this->categories[] = $categories;
+    
+        return $this;
+    }
+
+    public function removeCategory(Category $categories)
+    {
+        $this->categories->removeElement($categories);
+    }
+
+    public function getCategories()
     {
         return $this->categories;
     }
-    
-    public function setCategories(string $categories): self
-    {
-        $this->categories = $categories;
 
-        return $this;
-    }
+    public function __toString () {
+        return $this->name;
+    } 
 }

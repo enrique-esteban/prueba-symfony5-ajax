@@ -16,17 +16,16 @@
         $(document).ready(function () {
             $('#addJob').click(function () {
                 var name = $('#name').val();
-                var categories = "";
-                var categoriesArray = $(".category");
+                var categories = [];
+                var categoriesChbx = $(".category");
 
                 if (name === "") {
                     alert("campo vacio");
                 } else {
-                    categoriesArray.each(function () {
+                    categoriesChbx.each(function () {
                         var item = $(this);
-                        item.is(':checked') ? categories += (item.attr("name") + ",") : "";
+                        item.is(':checked') ? categories.push(item.attr("name")) : "";
                     });
-                    categories = categories.slice(0, -1);
 
                     var job = {
                         name: name,
@@ -46,9 +45,7 @@
                         }
                     });
                 }
-
             });
-
 
             console.log('ready');
         })
@@ -73,16 +70,8 @@
             <input name="javascript" type="checkbox" class="category form-check-input">
             <label for="javascript" class="form-check-label">JavaScript</label>
 
-            <input tname="css" type="checkbox" class="category form-check-input">
+            <input name="css" type="checkbox" class="category form-check-input">
             <label for="css" class="form-check-label">CSS</label>
-
-            {% if errors is defined %}
-                <ul class="errors">
-                    {% for error in errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
 
             <input id="addJob" type="submit" value="Añadir" class="btn btn-primary"/>
         </form>
@@ -102,9 +91,14 @@
                 <tbody></tbody>
 
                 {% for job in jobs %}
+                    {{ dump(job) }}
                     <tr>
                         <th>{{ job.name }}</th>
-                        <th>{{ job.categories }}</th>
+                        <th>
+                            {% for category in job.categories %}
+                                {{ category.name }}
+                            {% endfor %}
+                        </th>
                         <th>X</th>
                     </tr>
                 {% endfor %}
