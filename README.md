@@ -9,7 +9,9 @@
 2. Descargarte aplicación en la carpeta del servidor:
 
     `$ git clone git@github.com:enrique-esteban/prueba-php.git nombre-app`
+    
     `$ cd nombre-app/ `
+    
     `$ composer instal`
 
 3. Configurar la base de datos en el archivo _.env_.
