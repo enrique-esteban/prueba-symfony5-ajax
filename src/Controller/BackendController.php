@@ -15,7 +15,13 @@ class BackendController extends AbstractController
 {
     public function index(): Response
     {
-        //
+        //NOTA: Obtengo los datos de la BD desde Doctrine, sin embargo adjunto la sentencia MYSQL 
+        //      que usaría para obtener los datos si prescindiera del ORM:
+        //         SELECT job.name, GROUP_CONCAT(category.name)
+        //         FROM job
+        //         LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
+        //         LEFT JOIN category ON jobs_categories.category_id = category.id
+        //         GROUP BY job.id;
         $jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
 
         dump($jobs);
