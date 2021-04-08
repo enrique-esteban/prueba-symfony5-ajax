@@ -15,6 +15,7 @@ class BackendController extends AbstractController
 {
     public function index(): Response
     {
+        //
         $jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
 
         dump($jobs);
@@ -65,7 +66,22 @@ class BackendController extends AbstractController
 
             return new JsonResponse($job);
         }
-    
-        return new Response('Ups, Algo ha ido mal', 400);
+    }
+
+    public function ajaxRemoveJob (Request $request)
+    {
+        if ($request->isXMLHttpRequest()) {         
+            $jobId = $request->request->get('jobId');
+            
+            $job = $this->getDoctrine()->getRepository(Job::class)->findOneBy(['id' => $jobId]);
+
+            dump($job);
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->remove($job);
+            $entityManager->flush();
+            
+            return new JsonResponse($job);
+        }
     }
 }

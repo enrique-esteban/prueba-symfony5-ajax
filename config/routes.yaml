@@ -6,3 +6,8 @@ ajax_save_job:
     path: /ajax-save-job
     controller: App\Controller\BackendController::ajaxSaveJob
     methods: [POST]
+
+ajax_remove_job:
+    path: /ajax-remove-job
+    controller: App\Controller\BackendController::ajaxRemoveJob
+    methods: [POST]

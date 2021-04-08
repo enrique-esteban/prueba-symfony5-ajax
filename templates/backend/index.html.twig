@@ -47,10 +47,28 @@
                 }
             });
 
+            $('#removeJob').click(function () {
+                var jobId = this.name;
+
+                $.ajax({
+                    url: "{{ url('ajax_remove_job') }}",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        "jobId": jobId
+                    },
+                    async: true,
+                    success: function (data) {
+                        console.log(data);
+                        window.location.reload();
+                    }
+                });
+            });
             console.log('ready');
         })
     </script>
 {% endblock %}
+
 {% block body %}
     {% if job is defined %}
         job
@@ -88,25 +106,23 @@
                         <th scope="col">Acciones</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
-
-                {% for job in jobs %}
-                    {{ dump(job) }}
-                    <tr>
-                        <th>{{ job.name }}</th>
-                        <th>
-                            {% for category in job.categories %}
-                                {{ category.name }}
-                            {% endfor %}
-                        </th>
-                        <th>X</th>
-                    </tr>
-                {% endfor %}
+                <tbody>
+                    {% for job in jobs %}
+                        <tr id="{{ job.id }}">
+                            <th>{{ job.name }}</th>
+                            <th>
+                                {% for category in job.categories %}
+                                    {{ category.name }}
+                                {% endfor %}
+                            </th>
+                            <th>
+                                <button id="removeJob" name="{{ job.id }}" class="btn btn-danger btn-sm">X</button>
+                            </th>
+                        </tr>
+                    {% endfor %}
+                </tbody>
             </table>
         </div>
-        {% for job in jobs %}
-            {{ dump(job.name) }}
-        {% endfor %}
-        {{ dump(jobs) }}
+
     </div>
 {% endblock %}
