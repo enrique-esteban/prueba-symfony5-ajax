@@ -21,4 +21,4 @@
     
 5. Cargar el servidor de symfony (necesario [symfony_cli](https://symfony.com/download)):
 
-`$ symfony server:start`
+    `$ symfony server:start`
