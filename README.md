@@ -18,3 +18,7 @@
 4. Instalar fixtures:
 
     `$ php bin/console doctrine:fixtures:load`
+    
+5. Cargar el servidor de symfony (necesario [symfony_cli](https://symfony.com/download)):
+
+`$ symfony server:start`
