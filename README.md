@@ -9,10 +9,16 @@
 2. Descargarte aplicación en la carpeta del servidor:
 
     `$ git clone git@github.com:enrique-esteban/prueba-php.git nombre-app`
+    
     `$ cd nombre-app/ `
+    
     `$ composer instal`
 
 3. Configurar la base de datos en el archivo _.env_.
 4. Instalar fixtures:
 
     `$ php bin/console doctrine:fixtures:load`
+    
+5. Cargar el servidor de symfony (necesario [symfony_cli](https://symfony.com/download)):
+
+    `$ symfony server:start`
