@@ -9,26 +9,51 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Job;
 use App\Entity\Category;
+use Doctrine\ORM\Query\ResultSetMapping;
 //use Symfony\Component\Routing\Annotation\Route;
 
 class BackendController extends AbstractController
 {
     public function index(): Response
     {
-        //NOTA: Obtengo los datos de la BD desde Doctrine, sin embargo adjunto la sentencia MYSQL 
-        //      que usaría para obtener los datos si prescindiera del ORM:
-        //         SELECT job.name, GROUP_CONCAT(category.name)
-        //         FROM job
-        //         LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
-        //         LEFT JOIN category ON jobs_categories.category_id = category.id
-        //         GROUP BY job.id;
         $jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
 
-        dump($jobs);
+        return $this->render('backend/index.html.twig', ['jobs' => $jobs]);
+    }
+    
+    public function ajaxLoadJobs (Request $request)
+    {
+        if ($request->isXMLHttpRequest()) {    
+            //NOTA: Obtengo los datos de la BD desde Doctrine, sin embargo adjunto la sentencia MYSQL 
+            //      que usaría para obtener los datos si prescindiera del ORM:
+            //         SELECT job.name, GROUP_CONCAT(category.name)
+            //         FROM job
+            //         LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
+            //         LEFT JOIN category ON jobs_categories.category_id = category.id
+            //         GROUP BY job.id;
+            //$jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
+            $resultMapping = new ResultSetMapping();
+            $connection = $this->getDoctrine()->getConnection();
+            $query = 'SELECT job.name, GROUP_CONCAT(category.name) AS categories
+                      FROM job
+                      LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
+                      LEFT JOIN category ON jobs_categories.category_id = category.id
+                      GROUP BY job.id';
+            // $query->setParameter(1, 'romanb');
 
-        return $this->render('backend/index.html.twig', [
-            'jobs' => $jobs
-        ]);
+            $stmt = $connection->prepare($query);
+            $stmt->execute();
+            $jobs = $stmt->fetchAllAssociative();
+            // $jobs = $query->getResult();
+
+            $serializer = $this->container->get('serializer');
+            // $jobsJson = json_encode($jobs);
+
+            $jobsJson = $serializer->serialize($jobs, 'json');
+            dump($jobs, $jobsJson);
+
+            return new JsonResponse($jobsJson);
+        }
     }
 
     public function ajaxSaveJob (Request $request)
@@ -74,7 +99,7 @@ class BackendController extends AbstractController
                 */
             }
 
-            return new JsonResponse([ 'data' => $job, 'error' => false ]);
+            return new JsonResponse([ 'data' => $job, 'error' => "lo que sea" ]);
         }
         else {
             $response = new Response();

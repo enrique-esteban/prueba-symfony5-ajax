@@ -2,6 +2,11 @@ index:
     path: /
     controller: App\Controller\BackendController::index
 
+ajax_load_jobs:
+    path: /ajax-load-jobs
+    controller: App\Controller\BackendController::ajaxLoadJobs
+    methods: [POST]
+
 ajax_save_job:
     path: /ajax-save-job
     controller: App\Controller\BackendController::ajaxSaveJob
