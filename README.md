@@ -12,7 +12,7 @@
     
     `$ cd nombre-app/ `
     
-    `$ composer install
+    `$ composer install` 
 
 3. Configurar la base de datos en el archivo _.env_.
 4. Instalar fixtures:
