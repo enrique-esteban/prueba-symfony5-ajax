@@ -74,7 +74,7 @@
                         var job = JSON.parse(data.data);
                         console.log(job);
 
-                        var row = "<tr>";
+                        var row = "<tr class=\"" + job.name + "\">";
                             row += "<th>" + job.name + "</th>";
                             row += "<th>" + job.categories + "</th>";
                             row += '<th><button name="'+ job.name +'" class="btn btn-danger btn-sm removeJob">X</button></th>';
