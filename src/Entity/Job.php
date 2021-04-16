@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Symfony\Component\Serializer\Annotation\Groups;
 use App\Repository\JobRepository;
 use Doctrine\ORM\Mapping as ORM;
 use \App\Entity\Category;

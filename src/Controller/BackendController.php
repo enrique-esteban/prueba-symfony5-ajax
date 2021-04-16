@@ -6,11 +6,16 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
+
+// use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\ResultSetMapping;
+
 use App\Entity\Job;
 use App\Entity\Category;
-use Doctrine\ORM\Query\ResultSetMapping;
-//use Symfony\Component\Routing\Annotation\Route;
+
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 
 class BackendController extends AbstractController
 {
@@ -24,14 +29,6 @@ class BackendController extends AbstractController
     public function ajaxLoadJobs (Request $request)
     {
         if ($request->isXMLHttpRequest()) {    
-            //NOTA: Obtengo los datos de la BD desde Doctrine, sin embargo adjunto la sentencia MYSQL 
-            //      que usaría para obtener los datos si prescindiera del ORM:
-            //         SELECT job.name, GROUP_CONCAT(category.name)
-            //         FROM job
-            //         LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
-            //         LEFT JOIN category ON jobs_categories.category_id = category.id
-            //         GROUP BY job.id;
-            //$jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
             $resultMapping = new ResultSetMapping();
             $connection = $this->getDoctrine()->getConnection();
             $query = 'SELECT job.name, GROUP_CONCAT(category.name) AS categories
@@ -39,16 +36,12 @@ class BackendController extends AbstractController
                       LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
                       LEFT JOIN category ON jobs_categories.category_id = category.id
                       GROUP BY job.id';
-            // $query->setParameter(1, 'romanb');
 
             $stmt = $connection->prepare($query);
             $stmt->execute();
             $jobs = $stmt->fetchAllAssociative();
-            // $jobs = $query->getResult();
 
             $serializer = $this->container->get('serializer');
-            // $jobsJson = json_encode($jobs);
-
             $jobsJson = $serializer->serialize($jobs, 'json');
             dump($jobs, $jobsJson);
 
@@ -81,33 +74,31 @@ class BackendController extends AbstractController
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($job);
                 $entityManager->flush();
-                
-                // Metodo alternativo usando mysqli nativo php
-                /* $connect = new \mysqli("localhost", "root", "root", "prueba");
-                if ($connect->connect_error) {
-                    die("Connection failed: " . $connect->connect_error);
-                }
-                
-                $sql = "INSERT INTO Job VALUES (".rand().", '".$jobArray['name']."', '".$jobArray['name']."')";
 
-                if (mysqli_query($connect, $sql)) {
-                echo "Registro ingresado correctamente";
-                } else {
-                echo "Error: " . $sql . "" . mysqli_error($connect);
-                }
-                $connect->close();
-                */
+                $serializer = $this->container->get('serializer');
+                $jobJson = $serializer->serialize($jobArray, 'json');
+
+                // $encoders = [new JsonEncoder()];
+                // $normalizers = [new ObjectNormalizer()];
+                // $serializer = new Serializer($normalizers, $encoders);
+
+                // // Serialize your object in Json
+                // $jobJson = $serializer->serialize($job, 'json', [
+                //     'circular_reference_handler' => function ($object) {
+                //         return $object->getName();
+                //     }
+                // ]);
+                // dump($jobJson);
+
+               return new JsonResponse([ 'data' => $jobJson, 'error' => false ]);
+            }
+            else {
+                return new JsonResponse([ 'data' => '', 'error' => 'Ese taréa ya existe' ]);
             }
 
-            return new JsonResponse([ 'data' => $job, 'error' => "lo que sea" ]);
         }
         else {
-            $response = new Response();
-            $response->setContent(json_encode(array(
-                'data' => 123,
-            )));
-            $response->headers->set('Content-Type', 'application/json');
-            //return new response([ 'data' => "", 'error' => false ]);
+            return new JsonResponse([ 'data' => '', 'error' => "Error: ..." ]); // TODO
         }
     }
 

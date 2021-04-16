@@ -14,145 +14,164 @@
 {% endblock %}
 
 {% block javascripts %}
-    {{ parent() }}
+{{ parent() }}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
-    <script>
-        $(document).ready(function () { // function loadJobsTable() {
-            $.ajax({
-                url: "{{ url('ajax_load_jobs') }}",
-                type: "POST",
-                dataType: "json",
-                // data: jobs,
-                async: true,
-                success: function (jobs) {
-                    jobs = JSON.parse(jobs);
-                    console.log(jobs);
-                }
-            });
-            // }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function () { // Esta función carga (o recarga) la tabla de tareas
+        function setJobsTable(jobs) {
+            var jobListTB = $('#jobList tbody');
 
-            $('#addJob').click(function () {
-                var name = $('#name').val();
-                var categories = [];
-                var categoriesChbx = $(".category");
+            if (typeof jobs !== "undefined") {
+               $.each(jobs, function (i) {
+                   if (jobs[i].categories === null) {
+                       jobs[i].categories = "";
+                   }
 
-                if (name === "") {
-                    alert("Tienes que agregar una tarea.");
-                } else {
-                    categoriesChbx.each(function () {
-                        var item = $(this);
-                        item.is(':checked') ? categories.push(item.attr("name")) : "";
-                    });
+                   var row = "<tr>";
+                   row += "<th>" + jobs[i].name + "</th>";
+                   row += "<th>" + jobs[i].categories + "</th>";
+                   row += '<th><button id="removeJob" name="'+ jobs[i].name +'" class="btn btn-danger btn-sm">X</button></th>'
+                   row += "</tr>";
+                   
+                   jobListTB.append(row);
+               });
+            }
+        }
 
-                    var job = {
-                        name: name,
-                        categories: categories
-                    };
-                    var error = false;
+        // Añadir tarea
+        $('#addJob').click(function () {
+            var name = $('#name').val();
+            var categories = [];
+            var categoriesChbx = $(".category");
 
-                    $.ajax({
-                        url: "{{ url('ajax_save_job') }}",
-                        type: "POST",
-                        dataType: "json",
-                        data: {
-                            "job": job,
-                            "error": error
-                        },
-                        async: true,
-                        success: function (data, error) {
-                            console.log(data, error);
+            if (name === "") {
+                alert("Tienes que agregar una tarea.");
+            } else {
+                categoriesChbx.each(function () {
+                    var item = $(this);
+                    item.is(':checked') ? categories.push(item.attr("name")) : "";
+                });
 
-                            errorDiv = $('.error');
-                            errorDiv.html(error);
-                            errorDiv.show();
-
-                            if (error !== false) {}
-                            window.location.reload();
-                        }
-                    });
-                }
-                return false;
-            });
-
-            $('#removeJob').click(function () {
-                console.log('click');
-                var jobId = this.name;
+                var job = {
+                    name: name,
+                    categories: categories
+                };
+                var error = false;
 
                 $.ajax({
-                    url: "{{ url('ajax_remove_job') }}",
+                    url: "{{ url('ajax_save_job') }}",
                     type: "POST",
                     dataType: "json",
                     data: {
-                        "jobId": jobId
+                        "job": job,
+                        "error": error
                     },
                     async: true,
-                    success: function (data) {
-                        console.log(data);
-                        window.location.reload();
+                    success: function (data, error) {
+                        console.log(data, data.error, data.data);
+
+                        var job = JSON.parse(data.data);
+                        console.log(job);
+
+                        var row = "<tr>";
+                            row += "<th>" + job.name + "</th>";
+                            row += "<th>" + job.categories + "</th>";
+                            row += '<th><button id="removeJob" name="'+ job.name +'" class="btn btn-danger btn-sm">X</button></th>';
+                            row += "</tr>"
+
+                        $('#jobList tr:last').after(row);
+                        
+                        if (data.error !== false) {
+                            errorDiv = $('.error');
+                            errorDiv.html(error);
+                            errorDiv.show();
+                        }
                     }
                 });
-                return false;
-            });
+            }
+            return false;
+        });
 
-            // loadJobsTable();
-            console.log('ready');
-        })
-    </script>
+        // Borrar taréa
+        $('#removeJob').click(function () {
+            console.log('click');
+            var jobId = this.name;
+
+            $.ajax({
+                url: "{{ url('ajax_remove_job') }}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    "jobId": jobId
+                },
+                async: true,
+                success: function (data) {
+                    console.log(data);
+                    window.location.reload();
+                }
+            });
+            return false;
+        });
+
+        // Cargar las tareas desde la BD
+        $.ajax({
+            url: "{{ url('ajax_load_jobs') }}",
+            type: "POST",
+            dataType: "json",
+            // data: jobs,
+            async: true,
+            success: function (jobs) {
+                jobs = JSON.parse(jobs);
+                setJobsTable(jobs);
+            }
+        });
+
+        // loadJobsTable();
+        console.log('ready');
+    })
+</script>
 {% endblock %}
 
 {% block body %}
-    <div class="example-wrapper">
-        <h1>Gestor de tareas</h1>
-        <hr>
-        <div class="alert alert-danger error">Error</div>
-        <form id="addjob" method="post" accept-charset="UTF-8" novalidate>
-            <input type="hidden" name="action" value="users/send-password-reset-email">
+<div class="example-wrapper">
+    <h1>Gestor de tareas</h1>
+    <hr>
+    <div class="alert alert-danger error">Error</div>
+    <form id="addjob" method="post" accept-charset="UTF-8" novalidate>
+        <input type="hidden" name="action" value="users/send-password-reset-email">
 
-            <input id="name" type="text" name="name" class="form-control" placeholder="Nueva tarea"/>
-            <br>
+        <input id="name" type="text" name="name" class="form-control" placeholder="Nueva tarea"/>
+        <br>
 
-            <input name="php" type="checkbox" class="category form-check-input">
-            <label for="php" class="form-check-label">PHP</label>
+        <input name="php" type="checkbox" class="category form-check-input">
+        <label for="php" class="form-check-label">PHP</label>
 
-            <input name="javascript" type="checkbox" class="category form-check-input">
-            <label for="javascript" class="form-check-label">JavaScript</label>
+        <input name="javascript" type="checkbox" class="category form-check-input">
+        <label for="javascript" class="form-check-label">JavaScript</label>
 
-            <input name="css" type="checkbox" class="category form-check-input">
-            <label for="css" class="form-check-label">CSS</label>
+        <input name="css" type="checkbox" class="category form-check-input">
+        <label for="css" class="form-check-label">CSS</label>
 
-            <input id="addJob" type="submit" value="Añadir" class="btn btn-primary"/>
-        </form>
+        <input id="addJob" type="submit" value="Añadir" class="btn btn-primary"/>
+    </form>
+</div>
+<br><br>
+
+<div class="row mb-3">
+    <div class="col-md-8 themed-grid-col">
+
+        <table id="jobList" class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Tareas</th>
+                    <th scope="col">Categorías</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
-    <br><br>
-
-    <div class="row mb-3">
-        <div class="col-md-8 themed-grid-col">
-
-            <table id="jobList" class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Tareas</th>
-                        <th scope="col">Categorías</th>
-                        <th scope="col">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for job in jobs %}
-                        <tr id="{{ job.id }}">
-                            <th>{{ job.name }}</th>
-                            <th>
-                                {% for category in job.categories %}
-                                    {{ category.name }}
-                                {% endfor %}
-                            </th>
-                            <th>
-                                <button id="removeJob" name="{{ job.id }}" class="btn btn-danger btn-sm">X</button>
-                            </th>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+</div>
 {% endblock %}
