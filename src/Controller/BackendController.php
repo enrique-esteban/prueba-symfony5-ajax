@@ -105,11 +105,11 @@ class BackendController extends AbstractController
     public function ajaxRemoveJob (Request $request)
     {
         if ($request->isXMLHttpRequest()) {         
-            $jobId = $request->request->get('jobId');
+            $jobName = $request->request->get('jobName');
             
-            $job = $this->getDoctrine()->getRepository(Job::class)->findOneBy(['id' => $jobId]);
+            $job = $this->getDoctrine()->getRepository(Job::class)->findOneBy(['name' => $jobName]);
 
-            dump($job);
+            // dump($job);
 
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->remove($job);

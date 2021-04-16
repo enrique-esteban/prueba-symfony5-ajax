@@ -28,7 +28,7 @@
                        jobs[i].categories = "";
                    }
 
-                   var row = "<tr>";
+                   var row = "<tr class=\"" + jobs[i].name + "\">";
                    row += "<th>" + jobs[i].name + "</th>";
                    row += "<th>" + jobs[i].categories + "</th>";
                    row += '<th><button id="removeJob" name="'+ jobs[i].name +'" class="btn btn-danger btn-sm">X</button></th>'
@@ -77,7 +77,7 @@
                         var row = "<tr>";
                             row += "<th>" + job.name + "</th>";
                             row += "<th>" + job.categories + "</th>";
-                            row += '<th><button id="removeJob" name="'+ job.name +'" class="btn btn-danger btn-sm">X</button></th>';
+                            row += '<th><button name="'+ job.name +'" class="btn btn-danger btn-sm removeJob">X</button></th>';
                             row += "</tr>"
 
                         $('#jobList tr:last').after(row);
@@ -94,21 +94,25 @@
         });
 
         // Borrar taréa
-        $('#removeJob').click(function () {
-            console.log('click');
-            var jobId = this.name;
+        $("#jobList").on("click", 'button', function(){
+            // console.log('click');
+            jobName = $(this).attr("name");
 
             $.ajax({
                 url: "{{ url('ajax_remove_job') }}",
                 type: "POST",
                 dataType: "json",
                 data: {
-                    "jobId": jobId
+                    "jobName": jobName
                 },
                 async: true,
                 success: function (data) {
-                    console.log(data);
-                    window.location.reload();
+                    //console.log(data);
+
+                    classJob = "#jobList tbody tr." + jobName;
+                    $(classJob).remove();
+                    // $('#jobList tr:last')
+                    // window.location.reload();  
                 }
             });
             return false;
@@ -127,7 +131,6 @@
             }
         });
 
-        // loadJobsTable();
         console.log('ready');
     })
 </script>
