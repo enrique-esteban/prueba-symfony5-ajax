@@ -21,7 +21,7 @@
     $(document).ready(function () {
         // Añade tareas a la tabla de tareas
         function addToTable(jobs) {
-            var jobListTB = $('#jobList tbody');
+            let jobListTB = $('#jobList tbody');
             
             if (typeof jobs !== "undefined") {
                 $.each(jobs, function (i) {
@@ -29,7 +29,7 @@
                         jobs[i].categories = "";
                     }
 
-                    var row = "<tr class=\"" + jobs[i].name + "\">";
+                    let row = "<tr class=\"" + jobs[i].name + "\">";
                     row += "<th>" + jobs[i].name + "</th>";
                     row += "<th>" + jobs[i].categories + "</th>";
                     row += '<th><button id="removeJob" name="'+ jobs[i].name +'" class="btn btn-danger btn-sm">X</button></th>'
@@ -41,7 +41,6 @@
         }
 
         function showErrorMessage(message) {
-            console.log("Con error");
             errorDiv = $('.error');
             errorDiv.html(message);
 
@@ -52,22 +51,37 @@
             }, 5000);
         }
 
+        // Cargar las tareas desde la BD
+        function loadJobs() {
+            $.ajax({
+                url: "{{ url('ajax_load_jobs') }}",
+                type: "POST",
+                dataType: "json",
+                // data: jobs,
+                async: true,
+                success: function (jobs) {
+                    jobs = JSON.parse(jobs);
+                    addToTable(jobs);
+                }
+            });
+        }
+
         // Añade una tarea a la BD y la tabla de tareas
         function addJob () {
-            var name = $('#name').val();
-            console.log(name);
+            let name = $('#name').val();
+            
             if (name === "") {
                 showErrorMessage("Campo de texto vacío. Por favor, agregue una tarea.");
             } else {
-                var categories = [];
-                var categoriesChbx = $(".category");
+                let categories = [];
+                let categoriesChbx = $(".category");
 
                 categoriesChbx.each(function () {
-                    var item = $(this);
+                    let item = $(this);
                     item.is(':checked') ? categories.push(item.attr("name")) : "";
                 });
 
-                var job = {
+                let job = {
                     name: name,
                     categories: categories
                 };
@@ -82,7 +96,7 @@
                     async: true,
                     success: function (data) {
                         if (data.error === false) {
-                            var job = JSON.parse(data.data);
+                            let job = JSON.parse(data.data);
                             
                             if (typeof job.categories !== "undefined") {
                                 job.categories = job.categories.toString();
@@ -102,49 +116,32 @@
             return false;
         }
 
-        // Borrar tarea
-        $("#jobList").on("click", 'button', function(){
+        // Borrar una tarea
+        function removeJob(){
             // console.log('click');
-            jobName = $(this).attr("name");
+            let job = $(this);
 
             $.ajax({
                 url: "{{ url('ajax_remove_job') }}",
                 type: "POST",
                 dataType: "json",
                 data: {
-                    "jobName": jobName
+                    "jobName": job.attr("name")
                 },
                 async: true,
                 success: function (data) {
-                    //console.log(data);
-                    classJob = "#jobList tbody tr." + jobName;
-                    $(classJob).remove();
+                    job.parent().parent().remove();
                 }
             });
-            return false;
-        });
 
-        // Cargar las tareas desde la BD
-        function loadJobs() {
-            $.ajax({
-                url: "{{ url('ajax_load_jobs') }}",
-                type: "POST",
-                dataType: "json",
-                // data: jobs,
-                async: true,
-                success: function (jobs) {
-                    jobs = JSON.parse(jobs);
-                    addToTable(jobs);
-                }
-            });
+            return false;
         }
 
         // Secuencia de la aplicación
         loadJobs(); // Obtiene los datos de la BD y rellena la tabla con las taréas obtenidas. 
         
         $('#addJob').click(addJob); // Guarda una tarea en la BD y la imprime en la tabla.
-
-        console.log('ready');
+        $("#jobList").on("click", 'button', removeJob); // Borra una tarea de la base de datos y de la tabla.
     })
 </script>
 {% endblock %}
