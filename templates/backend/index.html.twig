@@ -18,36 +18,50 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
 <script>
-    $(document).ready(function () { // Esta función carga (o recarga) la tabla de tareas
-        function setJobsTable(jobs) {
+    $(document).ready(function () {
+        // Añade tareas a la tabla de tareas
+        function addToTable(jobs) {
             var jobListTB = $('#jobList tbody');
-
+            
             if (typeof jobs !== "undefined") {
-               $.each(jobs, function (i) {
-                   if (jobs[i].categories === null) {
-                       jobs[i].categories = "";
-                   }
+                $.each(jobs, function (i) {
+                    if (jobs[i].categories === null) {
+                        jobs[i].categories = "";
+                    }
 
-                   var row = "<tr class=\"" + jobs[i].name + "\">";
-                   row += "<th>" + jobs[i].name + "</th>";
-                   row += "<th>" + jobs[i].categories + "</th>";
-                   row += '<th><button id="removeJob" name="'+ jobs[i].name +'" class="btn btn-danger btn-sm">X</button></th>'
-                   row += "</tr>";
-                   
-                   jobListTB.append(row);
-               });
+                    var row = "<tr class=\"" + jobs[i].name + "\">";
+                    row += "<th>" + jobs[i].name + "</th>";
+                    row += "<th>" + jobs[i].categories + "</th>";
+                    row += '<th><button id="removeJob" name="'+ jobs[i].name +'" class="btn btn-danger btn-sm">X</button></th>'
+                    row += "</tr>";
+
+                    jobListTB.append(row);
+                });
             }
         }
 
-        // Añadir tarea
-        $('#addJob').click(function () {
-            var name = $('#name').val();
-            var categories = [];
-            var categoriesChbx = $(".category");
+        function showErrorMessage(message) {
+            console.log("Con error");
+            errorDiv = $('.error');
+            errorDiv.html(message);
 
+            errorDiv.fadeIn("slow");
+
+            setTimeout(function() {
+                errorDiv.fadeOut("slow"); 
+            }, 5000);
+        }
+
+        // Añade una tarea a la BD y la tabla de tareas
+        function addJob () {
+            var name = $('#name').val();
+            console.log(name);
             if (name === "") {
-                alert("Tienes que agregar una tarea.");
+                showErrorMessage("Campo de texto vacío. Por favor, agregue una tarea.");
             } else {
+                var categories = [];
+                var categoriesChbx = $(".category");
+
                 categoriesChbx.each(function () {
                     var item = $(this);
                     item.is(':checked') ? categories.push(item.attr("name")) : "";
@@ -57,43 +71,38 @@
                     name: name,
                     categories: categories
                 };
-                var error = false;
 
                 $.ajax({
                     url: "{{ url('ajax_save_job') }}",
                     type: "POST",
                     dataType: "json",
                     data: {
-                        "job": job,
-                        "error": error
+                        "job": job
                     },
                     async: true,
-                    success: function (data, error) {
-                        console.log(data, data.error, data.data);
+                    success: function (data) {
+                        if (data.error === false) {
+                            var job = JSON.parse(data.data);
+                            
+                            if (typeof job.categories !== "undefined") {
+                                job.categories = job.categories.toString();
+                            }
+                            else {
+                                job.categories = "";
+                            }
 
-                        var job = JSON.parse(data.data);
-                        console.log(job);
-
-                        var row = "<tr class=\"" + job.name + "\">";
-                            row += "<th>" + job.name + "</th>";
-                            row += "<th>" + job.categories + "</th>";
-                            row += '<th><button name="'+ job.name +'" class="btn btn-danger btn-sm removeJob">X</button></th>';
-                            row += "</tr>"
-
-                        $('#jobList tr:last').after(row);
-                        
-                        if (data.error !== false) {
-                            errorDiv = $('.error');
-                            errorDiv.html(error);
-                            errorDiv.show();
+                            addToTable([job]);
+                        } else {
+                           showErrorMessage(data.error); 
                         }
                     }
                 });
             }
-            return false;
-        });
 
-        // Borrar taréa
+            return false;
+        }
+
+        // Borrar tarea
         $("#jobList").on("click", 'button', function(){
             // console.log('click');
             jobName = $(this).attr("name");
@@ -108,28 +117,32 @@
                 async: true,
                 success: function (data) {
                     //console.log(data);
-
                     classJob = "#jobList tbody tr." + jobName;
                     $(classJob).remove();
-                    // $('#jobList tr:last')
-                    // window.location.reload();  
                 }
             });
             return false;
         });
 
         // Cargar las tareas desde la BD
-        $.ajax({
-            url: "{{ url('ajax_load_jobs') }}",
-            type: "POST",
-            dataType: "json",
-            // data: jobs,
-            async: true,
-            success: function (jobs) {
-                jobs = JSON.parse(jobs);
-                setJobsTable(jobs);
-            }
-        });
+        function loadJobs() {
+            $.ajax({
+                url: "{{ url('ajax_load_jobs') }}",
+                type: "POST",
+                dataType: "json",
+                // data: jobs,
+                async: true,
+                success: function (jobs) {
+                    jobs = JSON.parse(jobs);
+                    addToTable(jobs);
+                }
+            });
+        }
+
+        // Secuencia de la aplicación
+        loadJobs(); // Obtiene los datos de la BD y rellena la tabla con las taréas obtenidas. 
+        
+        $('#addJob').click(addJob); // Guarda una tarea en la BD y la imprime en la tabla.
 
         console.log('ready');
     })

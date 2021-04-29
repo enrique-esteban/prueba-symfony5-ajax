@@ -7,26 +7,28 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-// use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\ResultSetMapping;
 
 use App\Entity\Job;
 use App\Entity\Category;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
-
 class BackendController extends AbstractController
 {
+    /**
+     * Carga la página de inicio.
+     */
     public function index(): Response
     {
-        $jobs = $this->getDoctrine()->getRepository(Job::class)->findAll();
-
-        return $this->render('backend/index.html.twig', ['jobs' => $jobs]);
+        return $this->render('backend/index.html.twig');
     }
     
-    public function ajaxLoadJobs (Request $request)
+    /**
+     * Recoge una petición Ajax para cargar los datos (Jobs and Categories) de la base de datos para
+     *    su presentación como una tabla en la página de inicio.
+     * 
+     * @return Jsonresponse|Response
+     */
+    public function ajaxLoadJobs (Request $request): JsonResponse
     {
         if ($request->isXMLHttpRequest()) {    
             $resultMapping = new ResultSetMapping();
@@ -43,15 +45,21 @@ class BackendController extends AbstractController
 
             $serializer = $this->container->get('serializer');
             $jobsJson = $serializer->serialize($jobs, 'json');
-            dump($jobs, $jobsJson);
 
             return new JsonResponse($jobsJson);
         }
+        else {
+            return new Response(null, 403);
+        }
     }
 
-    public function ajaxSaveJob (Request $request)
+    /**
+     * Responde a una llamada Ajax para guardar una nueva taréa en la base de datos.
+     * 
+     * @return Jsonresponse|Response
+     */
+    public function ajaxSaveJob (Request $request): JsonResponse
     {
-        //dump($request->isXMLHttpRequest());
         if ($request->isXMLHttpRequest()) {         
             $jobArray = $request->request->get('job');
 
@@ -70,7 +78,6 @@ class BackendController extends AbstractController
                     }
                 }
 
-
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($job);
                 $entityManager->flush();
@@ -78,31 +85,24 @@ class BackendController extends AbstractController
                 $serializer = $this->container->get('serializer');
                 $jobJson = $serializer->serialize($jobArray, 'json');
 
-                // $encoders = [new JsonEncoder()];
-                // $normalizers = [new ObjectNormalizer()];
-                // $serializer = new Serializer($normalizers, $encoders);
-
-                // // Serialize your object in Json
-                // $jobJson = $serializer->serialize($job, 'json', [
-                //     'circular_reference_handler' => function ($object) {
-                //         return $object->getName();
-                //     }
-                // ]);
-                // dump($jobJson);
-
-               return new JsonResponse([ 'data' => $jobJson, 'error' => false ]);
+                return new JsonResponse([ 'data' => $jobJson, 'error' => false ]);
             }
             else {
-                return new JsonResponse([ 'data' => '', 'error' => 'Ese taréa ya existe' ]);
+                return new JsonResponse([ 'data' => '', 'error' => 'Esa taréa ya existe, por favor introduce una tarea nueva' ]);
             }
 
         }
         else {
-            return new JsonResponse([ 'data' => '', 'error' => "Error: ..." ]); // TODO
+            return new Response(null, 403);            
         }
     }
 
-    public function ajaxRemoveJob (Request $request)
+    /**
+     * Responde a una llamada Ajax para eliminar una taréa de la base de datos.
+     * 
+     * @return Jsonresponse|Response
+     */
+    public function ajaxRemoveJob (Request $request): JsonResponse
     {
         if ($request->isXMLHttpRequest()) {         
             $jobName = $request->request->get('jobName');
@@ -116,6 +116,9 @@ class BackendController extends AbstractController
             $entityManager->flush();
             
             return new JsonResponse($job);
+        }
+        else {
+            return new Response(null, 403);
         }
     }
 }
