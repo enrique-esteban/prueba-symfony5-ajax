@@ -40,8 +40,9 @@
             }
         }
 
+        // Muestra un mensage de error durante 5s.
         function showErrorMessage(message) {
-            errorDiv = $('.error');
+            let errorDiv = $('.error');
             errorDiv.html(message);
 
             errorDiv.fadeIn("slow");
@@ -51,7 +52,25 @@
             }, 5000);
         }
 
-        // Cargar las tareas desde la BD
+        // Añade los checkbox de las categorías
+        function addCategoriesChbx(categories) {
+            if (typeof categories !== "undefined") {
+                // '<input name="css" type="checkbox" class="category form-check-input">'
+                // '<label for="css" class="form-check-label">CSS</label>'
+                let form = $("#addJob");
+
+                $.each(categories, function (index, category){
+                    console.log(category);
+                    let input = '<input name="' + category + '" type="checkbox" class="form-check-input me-1 category">';
+                    form.before(input);
+
+                    let label = '<label for="' + category + '" class="form-check-label me-3 category">' + category.toUpperCase() + '</label>';
+                    form.before(label);
+                });
+            }
+        }
+
+        // Cargar las tareas y las categorias de la BD y termina de construir el HTML
         function loadJobs() {
             $.ajax({
                 url: "{{ url('ajax_load_jobs') }}",
@@ -59,8 +78,9 @@
                 dataType: "json",
                 // data: jobs,
                 async: true,
-                success: function (jobs) {
-                    jobs = JSON.parse(jobs);
+                success: function (data) {
+                    let jobs = JSON.parse(data.jobs);
+                    addCategoriesChbx(data.categories);
                     addToTable(jobs);
                 }
             });
@@ -75,6 +95,7 @@
             } else {
                 let categories = [];
                 let categoriesChbx = $(".category");
+                console.log(categoriesChbx);
 
                 categoriesChbx.each(function () {
                     let item = $(this);
@@ -151,20 +172,20 @@
     <h1>Gestor de tareas</h1>
     <hr>
     <div class="alert alert-danger error">Error</div>
-    <form id="addjob" method="post" accept-charset="UTF-8" novalidate>
+    <form id="formJobs" method="post" accept-charset="UTF-8" novalidate>
         <input type="hidden" name="action" value="users/send-password-reset-email">
 
         <input id="name" type="text" name="name" class="form-control" placeholder="Nueva tarea"/>
         <br>
 
-        <input name="php" type="checkbox" class="category form-check-input">
+        {# <input name="php" type="checkbox" class="form-check-input">
         <label for="php" class="form-check-label">PHP</label>
 
-        <input name="javascript" type="checkbox" class="category form-check-input">
+        <input name="javascript" type="checkbox" class="form-check-input">
         <label for="javascript" class="form-check-label">JavaScript</label>
 
-        <input name="css" type="checkbox" class="category form-check-input">
-        <label for="css" class="form-check-label">CSS</label>
+        <input name="css" type="checkbox" class="form-check-input">
+        <label for="css" class="form-check-label">CSS</label> #}
 
         <input id="addJob" type="submit" value="Añadir" class="btn btn-primary"/>
     </form>

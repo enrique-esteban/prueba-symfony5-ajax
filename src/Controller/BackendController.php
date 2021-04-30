@@ -38,15 +38,20 @@ class BackendController extends AbstractController
                       LEFT JOIN jobs_categories ON jobs_categories.job_id = job.id
                       LEFT JOIN category ON jobs_categories.category_id = category.id
                       GROUP BY job.id';
-
             $stmt = $connection->prepare($query);
             $stmt->execute();
             $jobs = $stmt->fetchAllAssociative();
 
+            $em = $this->getDoctrine()->getManager();
+            $categories = $em->getRepository(Category::class)->findAll();
+            foreach ($categories as $category) {
+                $categoriesNames[] = $category->getName();
+            }
+
             $serializer = $this->container->get('serializer');
             $jobsJson = $serializer->serialize($jobs, 'json');
 
-            return new JsonResponse($jobsJson);
+            return new JsonResponse(['jobs' => $jobsJson, 'categories' => $categoriesNames]);
         }
         else {
             return new Response(null, 403);
